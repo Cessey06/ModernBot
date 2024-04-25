@@ -1,7 +1,7 @@
 class AutoGratis extends ModernUtil {
     constructor(c, s) {
         super(c, s);
-        this.triedToGratis;
+
         if (this.storage.load('enable_autogratis', false)) this.toggle();
     }
 
@@ -54,12 +54,8 @@ class AutoGratis extends ModernUtil {
 
         const town = uw.ITowns.getCurrentTown();
         for (let model of town.buildingOrders().models) {
-            if (model.attributes.building_time < 300 && !this.triedToGratis.includes(model.id) ) {
+            if (model.attributes.building_time < 300) {
                 this.callGratis(town.id, model.id)
-                /*Sometimes when a building construction is less than 300 seconds and can be gratis he depend of the build of another building before him
-                 this provoke a loop on callGratis() to try to buy instant , so to avoid this loop the temporary solution is to not callGratis with this order id 
-                 This can append too for a to demolition*/
-                this.triedToGratis.push(model.id)
                 return;
             }
         }
