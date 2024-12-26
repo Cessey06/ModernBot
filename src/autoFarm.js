@@ -7,6 +7,7 @@ class AutoFarm extends ModernUtil {
         this.percent = this.storage.load('af_percent', 1);
         this.active = this.storage.load('af_active', false);
         this.gui = this.storage.load('af_gui', false);
+        this.nightFarm = this.storage.load('af_nightFarm', false);
 
         // Create the elements for the new menu
         const { $activity, $count } = this.createActivity("url(https://gpit.innogamescdn.com/images/game/premium_features/feature_icons_2.08.png) no-repeat 0 -240px");
@@ -25,27 +26,33 @@ class AutoFarm extends ModernUtil {
     /* Create the dropdown menu */
     createDropdown = () => {
         this.$content = $("<div></div>")
-        this.$title = $("<p>Modern Farm</p>").css({ "text-align": "center", "margin": "2px", "font-weight": "bold", "font-size": "16px" })
+        this.$title = $("<p>Modern Farm1016</p>").css({ "text-align": "center", "margin": "2px", "font-weight": "bold", "font-size": "16px" })
         this.$content.append(this.$title)
 
-        this.$duration = $("<p>Duration:</p>").css({ "text-align": "left", "margin": "2px", "font-weight": "bold" })
+        this.$duration = $("<p>Duration:</p>").css({ "text-align": "left", "margin": "4px", "font-weight": "bold" })
         this.$button5 = this.createButton("modern_farm_5", "5 min", this.toggleDuration)
         this.$button10 = this.createButton("modern_farm_10", "10 min", this.toggleDuration)
         this.$button20 = this.createButton("modern_farm_20", "20 min", this.toggleDuration)
         this.$content.append(this.$duration, this.$button5, this.$button10, this.$button20)
 
-        this.$storage = $("<p>Storage:</p>").css({ "text-align": "left", "margin": "2px", "font-weight": "bold" })
+        this.$storage = $("<p>Storage:</p>").css({ "text-align": "left", "margin": "4px", "font-weight": "bold" })
         this.$button80 = this.createButton("modern_farm_80", "80%", this.toggleStorage).css({ "width": "70px" })
         this.$button90 = this.createButton("modern_farm_90", "90%", this.toggleStorage).css({ "width": "80px" })
         this.$button100 = this.createButton("modern_farm_100", "100%", this.toggleStorage).css({ "width": "80px" })
         this.$content.append(this.$storage, this.$button80, this.$button90, this.$button100)
+        
 
-        this.$gui = $("<p>Gui:</p>").css({ "text-align": "left", "margin": "2px", "font-weight": "bold" })
-        this.$guiOn = this.createButton("modern_farm_gui_on", "ON", this.toggleGui)
-        this.$guiOff = this.createButton("modern_farm_gui_off", "OFF", this.toggleGui)
+        this.$nightFarm = $("<p>Night farming :</p>").css({ "text-align": "left", "margin": "4px", "font-weight": "bold" })
+        this.$buttonNightFarmingOn = this.createButton("modern_farm_night_on", "On", this.toggleNightFarm).css({ "width": "70px" })
+        this.$buttonNightFarmingOff = this.createButton("modern_farm_night_off", "Off", this.toggleNightFarm).css({ "width": "70px" })
+        this.$content.append(this.$nightFarm, this.$buttonNightFarmingOn, this.$buttonNightFarmingOff)
+
+        this.$gui = $("<p>Gui:</p>").css({ "text-align": "left", "margin": "4px", "font-weight": "bold" })
+        this.$guiOn = this.createButton("modern_farm_gui_on", "On", this.toggleGui)
+        this.$guiOff = this.createButton("modern_farm_gui_off", "Off", this.toggleGui)
         this.$content.append(this.$gui, this.$guiOn, this.$guiOff)
 
-        this.$popup = this.createPopup(423, 250, 170, this.$content)
+        this.$popup = this.createPopup(423, 350, 230, this.$content)
         this.dropdown_active = false
 
         // Open and close the dropdown with the mouse
@@ -95,7 +102,9 @@ class AutoFarm extends ModernUtil {
 
         if (this.percent == 0.8) this.$button80.removeClass('disabled')
         if (this.percent == 0.9) this.$button90.removeClass('disabled')
+
         if (this.percent == 1) this.$button100.removeClass('disabled')
+
 
         if (!this.active) {
             this.$count.css('color', "red")
@@ -104,8 +113,22 @@ class AutoFarm extends ModernUtil {
 
         this.$guiOn.addClass('disabled')
         this.$guiOff.addClass('disabled')
-        if (this.gui) this.$guiOn.removeClass('disabled')
-        else this.$guiOff.removeClass('disabled')
+        if (this.gui){ 
+            this.$guiOn.removeClass('disabled')
+        }
+        else {
+            this.$guiOff.removeClass('disabled')
+        }
+
+        this.$buttonNightFarmingOn.addClass('disabled')
+        this.$buttonNightFarmingOff.addClass('disabled')
+        if (this.nightFarm) {
+            this.$buttonNightFarmingOn.removeClass('disabled')
+        }
+        else {
+            this.$buttonNightFarmingOff.removeClass('disabled')
+        }
+
     }
 
     toggleDuration = (event) => {
@@ -144,6 +167,17 @@ class AutoFarm extends ModernUtil {
 
         // Save the settings and update the buttons
         this.storage.save('af_gui', this.gui);
+        this.updateButtons()
+    }
+
+    toggleNightFarm = (event) => {
+        const { id } = event.currentTarget
+        // Update the nightFarm
+        if (id == "modern_farm_night_on") this.nightFarm = true
+        if (id == "modern_farm_night_off") this.nightFarm = false
+
+        // Save the settings and update the buttons
+        this.storage.save('af_nightFarm', this.nightFarm);
         this.updateButtons()
     }
 
@@ -224,56 +258,64 @@ class AutoFarm extends ModernUtil {
     };
 
     claim = async () => {
-        const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
-        const polis_list = this.generateList();
 
-        // If the captain is active, claim all the resources at once and fake the opening
-        if (isCaptainActive && !this.gui) {
-            await this.fakeOpening();
-            await this.sleep(Math.random() * 2000 + 1000); // random between 1 second and 3
-            await this.fakeSelectAll();
-            await this.sleep(Math.random() * 2000 + 1000);
-            if (this.timing <= 600_000) await this.claimMultiple(300, 600);
-            if (this.timing > 600_000) await this.claimMultiple(1200, 2400);
-            await this.fakeUpdate();
+        const date = new Date(Date.now()).getHours();
+        console.log(date)
+        console.log(this.nightFarm)
+        if(!this.nightFarm && !(date > 22 || date < 6)){
+            console.log('jerentre')
 
-            setTimeout(() => uw.WMap.removeFarmTownLootCooldownIconAndRefreshLootTimers(), 2000);
-            return;
-        }
+            const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
+            const polis_list = this.generateList();
 
-        if (isCaptainActive && this.gui) {
-            await this.fakeGuiUpdate();
-            return;
-        }
+            // If the captain is active, claim all the resources at once and fake the opening
+            if (isCaptainActive && !this.gui) {
+                await this.fakeOpening();
+                await this.sleep(Math.random() * 2000 + 1000); // random between 1 second and 3
+                await this.fakeSelectAll();
+                await this.sleep(Math.random() * 2000 + 1000);
+                if (this.timing <= 600_000) await this.claimMultiple(300, 600);
+                if (this.timing > 600_000) await this.claimMultiple(1200, 2400);
+                await this.fakeUpdate();
 
-        // If the captain is not active, claim the resources one by one, but limit the number of claims
-        let max = 60;
-        const { models: player_relation_models } = uw.MM.getOnlyCollectionByName('FarmTownPlayerRelation');
-        const { models: farm_town_models } = uw.MM.getOnlyCollectionByName('FarmTown');
-        const now = Math.floor(Date.now() / 1000);
-        for (let town_id of polis_list) {
-            let town = uw.ITowns.towns[town_id];
-            let x = town.getIslandCoordinateX();
-            let y = town.getIslandCoordinateY();
+                setTimeout(() => uw.WMap.removeFarmTownLootCooldownIconAndRefreshLootTimers(), 2000);
+                return;
+            }
 
-            for (let farm_town of farm_town_models) {
-                if (farm_town.attributes.island_x != x) continue;
-                if (farm_town.attributes.island_y != y) continue;
+            if (isCaptainActive && this.gui) {
+                await this.fakeGuiUpdate();
+                return;
+            }
 
-                for (let relation of player_relation_models) {
-                    if (farm_town.attributes.id != relation.attributes.farm_town_id) continue;
-                    if (relation.attributes.relation_status !== 1) continue;
-                    if (relation.attributes.lootable_at !== null && now < relation.attributes.lootable_at) continue;
+            // If the captain is not active, claim the resources one by one, but limit the number of claims
+            let max = 60;
+            const { models: player_relation_models } = uw.MM.getOnlyCollectionByName('FarmTownPlayerRelation');
+            const { models: farm_town_models } = uw.MM.getOnlyCollectionByName('FarmTown');
+            const now = Math.floor(Date.now() / 1000);
+            for (let town_id of polis_list) {
+                let town = uw.ITowns.towns[town_id];
+                let x = town.getIslandCoordinateX();
+                let y = town.getIslandCoordinateY();
 
-                    this.claimSingle(town_id, relation.attributes.farm_town_id, relation.id, Math.ceil(this.timing / 600_000));
-                    await this.sleep(500);
-                    if (!max) return;
-                    else max -= 1;
+                for (let farm_town of farm_town_models) {
+                    if (farm_town.attributes.island_x != x) continue;
+                    if (farm_town.attributes.island_y != y) continue;
+
+                    for (let relation of player_relation_models) {
+                        if (farm_town.attributes.id != relation.attributes.farm_town_id) continue;
+                        if (relation.attributes.relation_status !== 1) continue;
+                        if (relation.attributes.lootable_at !== null && now < relation.attributes.lootable_at) continue;
+
+                        this.claimSingle(town_id, relation.attributes.farm_town_id, relation.id, Math.ceil(this.timing / 600_000));
+                        await this.sleep(500);
+                        if (!max) return;
+                        else max -= 1;
+                    }
                 }
             }
-        }
 
-        setTimeout(() => uw.WMap.removeFarmTownLootCooldownIconAndRefreshLootTimers(), 2000);
+            setTimeout(() => uw.WMap.removeFarmTownLootCooldownIconAndRefreshLootTimers(), 2000);
+        }
     };
 
     /* Return the total resources of the polis in the list */
