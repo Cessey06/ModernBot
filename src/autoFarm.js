@@ -190,6 +190,16 @@ class AutoFarm extends ModernUtil {
 
         const { models: towns } = uw.MM.getOnlyCollectionByName('Town');
 
+        // if multiple towns on a island , take the alphabetic first p,e
+        towns.sort(function (a, b) {
+            if (a.attributes.name < b.attributes.name) {
+            return -1;
+            }
+            if (a.attributes.name > b.attributes.name) {
+            return 1;
+            }
+            return 0;
+        });
         for (const town of towns) {
             const { on_small_island, island_id, id } = town.attributes;
             if (on_small_island || islands_list.has(island_id)) continue;
@@ -260,10 +270,8 @@ class AutoFarm extends ModernUtil {
     claim = async () => {
 
         const date = new Date(Date.now()).getHours();
-        console.log(date)
-        console.log(this.nightFarm)
+  
         if(!this.nightFarm && !(date > 22 || date < 6)){
-            console.log('jerentre')
 
             const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
             const polis_list = this.generateList();
