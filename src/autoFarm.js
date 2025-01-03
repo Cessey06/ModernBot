@@ -26,7 +26,7 @@ class AutoFarm extends ModernUtil {
     /* Create the dropdown menu */
     createDropdown = () => {
         this.$content = $("<div></div>")
-        this.$title = $("<p>Modern Farm1016</p>").css({ "text-align": "center", "margin": "2px", "font-weight": "bold", "font-size": "16px" })
+        this.$title = $("<p>Modern Farm upgrade by Cessey</p>").css({ "text-align": "center", "margin": "2px", "font-weight": "bold", "font-size": "16px" })
         this.$content.append(this.$title)
 
         this.$duration = $("<p>Duration:</p>").css({ "text-align": "left", "margin": "4px", "font-weight": "bold" })
