@@ -269,10 +269,10 @@ class AutoFarm extends ModernUtil {
 
     claim = async () => {
 
-        const date = new Date(Date.now()).getHours();
-  
-        if(!this.nightFarm && !(date > 22 || date < 6)){
-
+        const hours = new Date(Date.now()).getHours();
+    
+        if(this.nightFarm || !(hours > 21 || hours < 6)){
+                console.log("farm / hours : " + hours)
             const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
             const polis_list = this.generateList();
 

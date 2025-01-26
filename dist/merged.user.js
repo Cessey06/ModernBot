@@ -1504,10 +1504,10 @@ class AutoFarm extends ModernUtil {
 
     claim = async () => {
 
-        const date = new Date(Date.now()).getHours();
-  
-        if(!this.nightFarm && !(date > 22 || date < 6)){
-
+        const hours = new Date(Date.now()).getHours();
+    
+        if(this.nightFarm || !(hours > 21 || hours < 6)){
+                console.log("farm / hours : " + hours)
             const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
             const polis_list = this.generateList();
 
@@ -3450,6 +3450,11 @@ class ModernBot {
         this.autoHide = new AutoHide(this.console, this.storage);
         this.antiRage = new AntiRage(this.console, this.storage);
         this.autoTrade = new AutoTrade(this.console, this.storage);
+        this.autoAlert = new AutoAlert(this.console, this.storage);
+
+
+
+
 
         this.settingsFactory = new createGrepoWindow({
             id: 'MODERN_BOT',
