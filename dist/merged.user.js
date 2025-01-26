@@ -3450,7 +3450,7 @@ class ModernBot {
         this.autoHide = new AutoHide(this.console, this.storage);
         this.antiRage = new AntiRage(this.console, this.storage);
         this.autoTrade = new AutoTrade(this.console, this.storage);
-        this.autoAlert = new AutoAlert(this.console, this.storage);
+        //this.autoAlert = new AutoAlert(this.console, this.storage);
 
 
 
