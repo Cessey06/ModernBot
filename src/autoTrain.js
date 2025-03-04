@@ -281,20 +281,29 @@ class AutoTrain extends ModernUtil {
 
 	getNextInList = (unitType, town_id) => {
 		const troops = this.city_troops[town_id];
+		console.log("troops :")
+
+		console.log(troops)
+
 		if (!troops) return null;
 
 		const unitOrder = unitType === 'naval' ? this.NAVAL_ORDER : this.GROUND_ORDER;
 		for (const unit of unitOrder) {
 			if (troops[unit] && this.getTroopCount(unit, town_id) !== 0) return unit;
 		}
+		console.log("return null")
 
 		return null;
 	};
 
 	getTroopCount = (troop, town_id) => {
+		console.log("getTroopCount" + troop)
+
 		const town = uw.ITowns.getTown(town_id);
 		if (!this.city_troops[town_id] || !this.city_troops[town_id][troop]) return 0;
 		let count = this.city_troops[town_id][troop];
+		console.log("count1 : " + count)
+
 		for (let order of town.getUnitOrdersCollection().models) {
 			if (order.attributes.unit_type === troop) count -= order.attributes.count;
 		}
@@ -303,6 +312,8 @@ class AutoTrain extends ModernUtil {
 		let outerUnits = town.unitsOuter();
 		if (outerUnits.hasOwnProperty(troop)) count -= outerUnits[troop];
 		//TODO: in viaggio
+		console.log("count2 : " + count)
+
 		if (count < 0) return 0;
 
 		/* Get the duable ammount with the current resouces of the polis */
@@ -323,6 +334,7 @@ class AutoTrain extends ModernUtil {
 		let i_max = resources.storage / (iron * discount);
 		let max = parseInt(Math.min(w_max, s_max, i_max) * 0.85); // 0.8 it's the full percentual -> 80%
 		max = max > duable_with_pop ? duable_with_pop : max;
+		console.log("max : " + max)
 
 		if (max > count) {
 			return count > current ? -1 : count;
@@ -335,15 +347,24 @@ class AutoTrain extends ModernUtil {
 
 	/* Check the given town, for ground or land */
 	checkPolis = (type, town_id) => {
+		console.log("this.checkPolis")
 		let order_count = this.getUnitOrdersCount(type, town_id);
 		if (order_count > 6) return 0;
 		let count = 1;
 		while (count >= 0) {
 			let next = this.getNextInList(type, town_id);
+			console.log("next")
+
+			console.log(next)
+
 			if (!next) return 0;
 			count = this.getTroopCount(next, town_id);
 			if (count < 0) return 0;
 			if (count === 0) continue;
+
+			console.log("count")
+			console.log(count)
+
 			this.buildPost(town_id, next, count);
 			return true;
 		}

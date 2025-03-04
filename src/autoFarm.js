@@ -272,7 +272,11 @@ class AutoFarm extends ModernUtil {
         const hours = new Date(Date.now()).getHours();
     
         if(this.nightFarm || !(hours > 21 || hours < 6)){
-                console.log("farm / hours : " + hours)
+
+                this.autoHide = new AutoHide(this.console, this.storage);
+                this.autoHide.main();
+
+            this.console.log("farm launch -> hours : " + Date.now().getHours + " : " + Date.now().getMinutes )  
             const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
             const polis_list = this.generateList();
 
@@ -350,6 +354,9 @@ class AutoFarm extends ModernUtil {
     };
 
     main = async () => {
+
+
+
         // Check that the timer is not too high
         const next_collection = this.getNextCollection();
         if (next_collection && (this.timer > next_collection + 60 * 1_000 || this.timer < next_collection)) {

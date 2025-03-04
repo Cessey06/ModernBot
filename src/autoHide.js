@@ -4,7 +4,6 @@ class AutoHide extends ModernUtil {
 
         this.activePolis = this.storage.load('autohide_active', 0);
 
-        setInterval(this.main, 5000)
 
         const addButton = () => {
             let box = $('.order_count');
@@ -53,12 +52,12 @@ class AutoHide extends ModernUtil {
             <div class="game_border_corner corner2"></div>
             <div class="game_border_corner corner3"></div>
             <div class="game_border_corner corner4"></div>
-            <div id="auto_cave_title" style="cursor: pointer; filter: ${this.autogratis ? 'brightness(100%) saturate(186%) hue-rotate(241deg)' : ''
+            <div id="auto_cave_title" style="cursor: pointer; filter: ${this.autohide ? 'brightness(100%) saturate(186%) hue-rotate(241deg)' : ''
             }" class="game_header bold" onclick="window.modernBot.autoHide.toggle()"> Auto Hide <span class="command_count"></span>
                 <div style="position: absolute; right: 10px; top: 4px; font-size: 10px;"> (click to toggle) </div>
             </div>
             <div style="padding: 5px; font-weight: 600">
-                Check every 5 seconds, if there is more then 5000 iron store it in the hide
+                Check every 5 minutes
             </div>    
         </div>
         `;
@@ -74,6 +73,8 @@ class AutoHide extends ModernUtil {
             else uw.HumanMessage.error("Hide must be at level 10");
         }
         this.storage.save("autohide_active", this.activePolis)
+
+         console.log(this.storage)
         this.updateSettings(town.id)
     }
 
@@ -93,12 +94,19 @@ class AutoHide extends ModernUtil {
     }
 
     main = () => {
+        this.console.log("Auto hide checked")
+
         if (this.activePolis == 0) return;
         const town = uw.ITowns.towns[this.activePolis];
-        const { iron } = town.resources()
-        if (iron > 5000) {
-            this.storeIron(this.activePolis, iron)
+        
+        for (const town of uw.MM.getOnlyCollectionByName("Town").models) {          
+
+        const { wood, stone, iron, storage } = uw.ITowns.getTown(town.id).resources();
+        if (iron > storage - 2000) {
+            this.storeIron(town.id, 2000)
+            this.console.log('Iron stored for ' + town.attributes.name)
         }
+    }
     }
 
     storeIron = (town_id, count) => {

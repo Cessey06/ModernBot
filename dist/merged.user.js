@@ -608,6 +608,80 @@ class AntiRage extends ModernUtil {
 
 */
 
+class AutoAlert extends ModernUtil {
+    constructor(c, s) {
+        super(c, s);
+        this.loop = setInterval(this.main, 60000);
+
+    }
+
+  
+
+    /* Main loop for the alert captcha bot */
+    main = () => {
+        //console.log(uw.Game);
+        
+        if (document.querySelector('#recaptcha_window')) {
+
+          this.console.log(" capcha asked !!")
+
+        
+            const botToken = '8196422009:AAFvWgY-fbBOqj7GXEMY92GHle3j1kcpTx0';
+            const chatId = '-1002402869572';  
+            const message = "You need capcha on world : " + uw.Game.world_id + " user : " + uw.Game.player_name;
+            ;
+            
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: message
+              })
+            })
+              .then(response => response.json())
+              .then(data => console.log("Message envoyé :", data))
+              .catch(error => console.error("Erreur :", error));
+        }
+        else {
+          this.console.log("No capcha asked ")
+        }
+        const element = document.querySelector('.notification.incoming_attack');
+        if (element && getComputedStyle(element).display === 'block') {
+
+          this.console.log("Attack detected!")
+
+        
+            const botToken = '8196422009:AAFvWgY-fbBOqj7GXEMY92GHle3j1kcpTx0';
+            const chatId = '-1002402869572';  
+            const message =" Careful ! attacke detected on world : " + uw.Game.world_id + " user : " + uw.Game.player_name;
+            ;
+            
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                chat_id: chatId,
+                text: message
+              })
+            })
+              .then(response => response.json())
+              .then(data => console.log("Message envoyé :", data))
+              .catch(error => console.error("Erreur :", error));
+        }
+        else {
+          this.console.log("No attack detected ")
+        }
+
+    
+    };
+
+}
+
 class AutoBootcamp extends ModernUtil {
     constructor(console, storage) {
         super(console, storage);
@@ -1507,7 +1581,11 @@ class AutoFarm extends ModernUtil {
         const hours = new Date(Date.now()).getHours();
     
         if(this.nightFarm || !(hours > 21 || hours < 6)){
-                console.log("farm / hours : " + hours)
+
+                this.autoHide = new AutoHide(this.console, this.storage);
+                this.autoHide.main();
+
+            this.console.log("farm launch -> hours : " + Date.now().getHours + " : " + Date.now().getMinutes )  
             const isCaptainActive = uw.GameDataPremium.isAdvisorActivated('captain');
             const polis_list = this.generateList();
 
@@ -1585,6 +1663,9 @@ class AutoFarm extends ModernUtil {
     };
 
     main = async () => {
+
+
+
         // Check that the timer is not too high
         const next_collection = this.getNextCollection();
         if (next_collection && (this.timer > next_collection + 60 * 1_000 || this.timer < next_collection)) {
@@ -1796,7 +1877,6 @@ class AutoHide extends ModernUtil {
 
         this.activePolis = this.storage.load('autohide_active', 0);
 
-        setInterval(this.main, 5000)
 
         const addButton = () => {
             let box = $('.order_count');
@@ -1845,12 +1925,12 @@ class AutoHide extends ModernUtil {
             <div class="game_border_corner corner2"></div>
             <div class="game_border_corner corner3"></div>
             <div class="game_border_corner corner4"></div>
-            <div id="auto_cave_title" style="cursor: pointer; filter: ${this.autogratis ? 'brightness(100%) saturate(186%) hue-rotate(241deg)' : ''
+            <div id="auto_cave_title" style="cursor: pointer; filter: ${this.autohide ? 'brightness(100%) saturate(186%) hue-rotate(241deg)' : ''
             }" class="game_header bold" onclick="window.modernBot.autoHide.toggle()"> Auto Hide <span class="command_count"></span>
                 <div style="position: absolute; right: 10px; top: 4px; font-size: 10px;"> (click to toggle) </div>
             </div>
             <div style="padding: 5px; font-weight: 600">
-                Check every 5 seconds, if there is more then 5000 iron store it in the hide
+                Check every 5 minutes
             </div>    
         </div>
         `;
@@ -1866,6 +1946,8 @@ class AutoHide extends ModernUtil {
             else uw.HumanMessage.error("Hide must be at level 10");
         }
         this.storage.save("autohide_active", this.activePolis)
+
+         console.log(this.storage)
         this.updateSettings(town.id)
     }
 
@@ -1885,12 +1967,19 @@ class AutoHide extends ModernUtil {
     }
 
     main = () => {
+        this.console.log("Auto hide checked")
+
         if (this.activePolis == 0) return;
         const town = uw.ITowns.towns[this.activePolis];
-        const { iron } = town.resources()
-        if (iron > 5000) {
-            this.storeIron(this.activePolis, iron)
+        
+        for (const town of uw.MM.getOnlyCollectionByName("Town").models) {          
+
+        const { wood, stone, iron, storage } = uw.ITowns.getTown(town.id).resources();
+        if (iron > storage - 2000) {
+            this.storeIron(town.id, 2000)
+            this.console.log('Iron stored for ' + town.attributes.name)
         }
+    }
     }
 
     storeIron = (town_id, count) => {
@@ -2838,20 +2927,29 @@ class AutoTrain extends ModernUtil {
 
 	getNextInList = (unitType, town_id) => {
 		const troops = this.city_troops[town_id];
+		console.log("troops :")
+
+		console.log(troops)
+
 		if (!troops) return null;
 
 		const unitOrder = unitType === 'naval' ? this.NAVAL_ORDER : this.GROUND_ORDER;
 		for (const unit of unitOrder) {
 			if (troops[unit] && this.getTroopCount(unit, town_id) !== 0) return unit;
 		}
+		console.log("return null")
 
 		return null;
 	};
 
 	getTroopCount = (troop, town_id) => {
+		console.log("getTroopCount" + troop)
+
 		const town = uw.ITowns.getTown(town_id);
 		if (!this.city_troops[town_id] || !this.city_troops[town_id][troop]) return 0;
 		let count = this.city_troops[town_id][troop];
+		console.log("count1 : " + count)
+
 		for (let order of town.getUnitOrdersCollection().models) {
 			if (order.attributes.unit_type === troop) count -= order.attributes.count;
 		}
@@ -2860,6 +2958,8 @@ class AutoTrain extends ModernUtil {
 		let outerUnits = town.unitsOuter();
 		if (outerUnits.hasOwnProperty(troop)) count -= outerUnits[troop];
 		//TODO: in viaggio
+		console.log("count2 : " + count)
+
 		if (count < 0) return 0;
 
 		/* Get the duable ammount with the current resouces of the polis */
@@ -2880,6 +2980,7 @@ class AutoTrain extends ModernUtil {
 		let i_max = resources.storage / (iron * discount);
 		let max = parseInt(Math.min(w_max, s_max, i_max) * 0.85); // 0.8 it's the full percentual -> 80%
 		max = max > duable_with_pop ? duable_with_pop : max;
+		console.log("max : " + max)
 
 		if (max > count) {
 			return count > current ? -1 : count;
@@ -2892,15 +2993,24 @@ class AutoTrain extends ModernUtil {
 
 	/* Check the given town, for ground or land */
 	checkPolis = (type, town_id) => {
+		console.log("this.checkPolis")
 		let order_count = this.getUnitOrdersCount(type, town_id);
 		if (order_count > 6) return 0;
 		let count = 1;
 		while (count >= 0) {
 			let next = this.getNextInList(type, town_id);
+			console.log("next")
+
+			console.log(next)
+
 			if (!next) return 0;
 			count = this.getTroopCount(next, town_id);
 			if (count < 0) return 0;
 			if (count === 0) continue;
+
+			console.log("count")
+			console.log(count)
+
 			this.buildPost(town_id, next, count);
 			return true;
 		}
@@ -3450,10 +3560,7 @@ class ModernBot {
         this.autoHide = new AutoHide(this.console, this.storage);
         this.antiRage = new AntiRage(this.console, this.storage);
         this.autoTrade = new AutoTrade(this.console, this.storage);
-        //this.autoAlert = new AutoAlert(this.console, this.storage);
-
-
-
+        this.autoAlert = new AutoAlert(this.console, this.storage);
 
 
         this.settingsFactory = new createGrepoWindow({
